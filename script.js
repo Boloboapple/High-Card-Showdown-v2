@@ -18,7 +18,7 @@ window.onload = function() {
     let playerScore = 0;
     let robotScore = 0;
     const TOTAL_CARDS = 24;
-    let isDrawing = false;
+    let isDrawing = false; // New: Prevents spamming draw action
 
     // --- Screen Management ---
     function showScreen(screenToShow) {
@@ -63,73 +63,23 @@ window.onload = function() {
     }
 
     // --- Game Logic ---
-function drawCards() {
-    // If a draw is already in progress, exit the function immediately
-    if (isDrawing) {
-        console.log("Draw in progress, button is on cooldown.");
-        return;
-    }
-
-    // Set flag to true and disable the button to start cooldown
-    isDrawing = true;
-    drawButton.disabled = true;
-    console.log("Draw initiated. Button disabled.");
-
-    // Check if deck has enough cards for two draws
-    if (deck.length <= 1) {
-        endGame();
-        // Reset isDrawing and enable button if game ends immediately
-        isDrawing = false;
-        drawButton.disabled = false;
-        return;
-    }
-
-    const playerCard = deck.pop();
-    const robotCard = deck.pop();
-
-    displayCard(playerCardDiv, playerCard);
-    displayCard(robotCardDiv, robotCard);
-
-    let message = '';
-    let winner = null;
-
-    if (playerCard > robotCard) {
-        playerScore++;
-        message = "You win this round!";
-        winner = 'player';
-    } else if (robotCard > playerCard) {
-        robotScore++;
-        message = "Robot wins this round!";
-        winner = 'robot';
-    } else {
-        message = "It's a tie! No points awarded this round.";
-    }
-
-    roundMessage.textContent = message;
-    roundMessage.classList.remove('winner', 'loser', 'tie');
-    if (winner === 'player') {
-        roundMessage.classList.add('winner');
-    } else if (winner === 'robot') {
-        roundMessage.classList.add('loser');
-    } else {
-        roundMessage.classList.add('tie');
-    }
-
-    updateUI();
-
-    // After 1 second, enable the button again and reset the flag
-    setTimeout(() => {
-        isDrawing = false;
-        // Only enable if the game hasn't ended already
-        if (deck.length > 1) {
-            drawButton.disabled = false;
-            console.log("Cooldown finished. Button enabled.");
-        } else {
-            console.log("Cooldown finished, but game ended.");
+    function drawCards() {
+        // If a draw is already in progress, exit the function immediately
+        if (isDrawing) {
+            return;
         }
-    }, 1000); // 1000 milliseconds = 1 second
-}
-            return; // Exit function after ending game
+
+        // Set flag to true and disable the button to start cooldown
+        isDrawing = true;
+        drawButton.disabled = true;
+
+        // Check if deck has enough cards for two draws
+        if (deck.length <= 1) {
+            endGame();
+            // Reset isDrawing and enable button if game ends immediately
+            isDrawing = false;
+            drawButton.disabled = false;
+            return;
         }
 
         const playerCard = deck.pop();
@@ -164,6 +114,15 @@ function drawCards() {
         }
 
         updateUI();
+
+        // After 1 second, enable the button again and reset the flag
+        setTimeout(() => {
+            isDrawing = false;
+            // Only enable if the game hasn't ended already
+            if (deck.length > 1) {
+                drawButton.disabled = false;
+            }
+        }, 1000); // 1000 milliseconds = 1 second
     }
 
     function displayCard(cardElement, value) {
