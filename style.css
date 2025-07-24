@@ -24,13 +24,13 @@ body {
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
-    position: absolute; /* Allows screens to occupy the same space */
+    position: absolute;
 }
 
 .screen.active {
     opacity: 1;
     visibility: visible;
-    position: static; /* Takes up space when active */
+    position: static;
 }
 
 h1 {
@@ -84,14 +84,14 @@ button:disabled {
     justify-content: space-around;
     width: 100%;
     margin-bottom: 30px;
-    position: relative; /* Added for positioning animated cards relative to it */
+    position: relative; /* Essential for positioning animated cards relative to it */
 }
 
 .player-area, .opponent-area {
     display: flex;
     flex-direction: column;
     align-items: center;
-    position: relative; /* Ensure these are also positioned */
+    position: relative;
     z-index: 1; /* Keep them above the deck pile */
 }
 
@@ -107,9 +107,9 @@ button:disabled {
     font-size: 2.5em;
     font-weight: bold;
     color: #333;
-    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); /* Adjusted shadow for consistency */
     margin-top: 10px;
-    transition: background-color 0.3s ease, color 0.3s ease; /* Removed transform from here */
+    transition: background-color 0.3s ease, color 0.3s ease;
     transform-style: preserve-3d; /* For 3D rotations */
 }
 
@@ -159,11 +159,11 @@ button:disabled {
     color: #ffeb3b;
 }
 
-/* NEW: Deck Pile Styling */
+/* Deck Pile Styling */
 #deck-pile {
     width: 100px;
     height: 150px;
-    background-color: #f0f0f0; /* Color of a card */
+    background-color: #f0f0f0;
     border: 2px solid #555;
     border-radius: 8px;
     display: flex;
@@ -172,20 +172,22 @@ button:disabled {
     font-size: 1.5em;
     font-weight: bold;
     color: #333;
-    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); /* Adjusted shadow */
     margin-top: 10px;
-    position: absolute; /* Position it in the center */
+    position: absolute;
     left: 50%;
-    transform: translateX(-50%); /* Center horizontally */
-    z-index: 0; /* Below actual cards */
-    background: linear-gradient(to bottom, #f0f0f0 0%, #d0d0d0 100%); /* Stacked card look */
+    transform: translateX(-50%);
+    z-index: 0;
+    background: linear-gradient(to bottom, #f0f0f0 0%, #d0d0d0 100%);
     text-align: center;
-    line-height: 150px; /* Vertically center the text if any */
+    line-height: 150px;
     color: #555;
+    /* Optional: Small adjustment to vertical position if needed */
+    /* top: calc(50% - 75px); */ /* uncomment if you want precise vertical centering within game-area */
 }
 
 #deck-pile::after {
-    content: 'DECK'; /* Or a card icon */
+    content: 'DECK';
     font-size: 1em;
     position: absolute;
     top: 50%;
@@ -193,9 +195,9 @@ button:disabled {
     transform: translate(-50%, -50%);
 }
 
-/* NEW: Styles for the animating cards */
+/* Styles for the animating cards */
 .animated-card {
-    position: absolute; /* Will be absolutely positioned over the deck */
+    position: absolute;
     width: 100px;
     height: 150px;
     background-color: #f0f0f0;
@@ -207,20 +209,17 @@ button:disabled {
     font-size: 2.5em;
     font-weight: bold;
     color: #333;
-    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
-    z-index: 10; /* Make sure it's on top during animation */
-    transform-style: preserve-3d; /* For 3D rotations */
-    backface-visibility: hidden; /* Hide back during flip if needed */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); /* Adjusted shadow */
+    z-index: 10;
+    transform-style: preserve-3d;
+    /* Removed backface-visibility: hidden; to ensure visibility during flip */
 }
 
-/* NEW: Keyframes for slide and flip animation */
+/* Keyframes for slide and flip animation */
 @keyframes slide-and-flip-player {
     0% {
-        opacity: 0;
-        transform: translate(0, 0) rotateY(0deg); /* Start at deck pile (relative to animated card's initial position) */
-    }
-    1% {
-        opacity: 1; /* Become visible immediately */
+        opacity: 1; /* Make visible from the start */
+        transform: translate(0, 0) rotateY(0deg); /* Starts at its initial absolute position (over deck) */
     }
     50% {
         transform: translate(var(--end-x, 0), var(--end-y, 0)) rotateY(180deg); /* Halfway to target, half-flipped */
@@ -233,11 +232,8 @@ button:disabled {
 
 @keyframes slide-and-flip-robot {
     0% {
-        opacity: 0;
-        transform: translate(0, 0) rotateY(0deg); /* Start at deck pile (relative to animated card's initial position) */
-    }
-    1% {
-        opacity: 1; /* Become visible immediately */
+        opacity: 1; /* Make visible from the start */
+        transform: translate(0, 0) rotateY(0deg); /* Starts at its initial absolute position (over deck) */
     }
     50% {
         transform: translate(var(--end-x, 0), var(--end-y, 0)) rotateY(180deg); /* Halfway to target, half-flipped */
