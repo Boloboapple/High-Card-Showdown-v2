@@ -47,12 +47,14 @@ function startGame() {
     robotScore = 0;
     updateUI();
     showScreen(gameScreen);
-    
+
+    // Ensure buttons are in correct state for a new game
     if (drawButton) drawButton.style.display = 'block';
+    if (drawButton) drawButton.disabled = false; // Make sure it's enabled at start
     if (resetButton) resetButton.style.display = 'none';
 
-    if (roundMessage) roundMessage.textContent = '';
-    
+    if (roundMessage) roundMessage.textContent = ''; // Clear previous messages
+
     if (playerCardDiv) {
         playerCardDiv.textContent = '?';
         playerCardDiv.className = 'card empty';
@@ -70,13 +72,13 @@ function drawCards() {
     }
 
     isDrawing = true;
-    if (drawButton) drawButton.disabled = true;
+    if (drawButton) drawButton.disabled = true; // Disable draw button while cards are being drawn
 
     if (deck.length <= 1) {
-        endGame();
-        isDrawing = false;
-        if (drawButton) drawButton.disabled = false;
-        return;
+        endGame(); // Call endGame when deck is depleted
+        // Removed: isDrawing = false; and if (drawButton) drawButton.disabled = false;
+        // These are handled by endGame and the reset button
+        return; // Exit drawCards, as game is over
     }
 
     const playerCardValue = deck.pop();
@@ -87,13 +89,12 @@ function drawCards() {
     if (robotCardDiv) robotCardDiv.classList.add('empty');
     if (playerCardDiv) playerCardDiv.textContent = '?';
     if (robotCardDiv) robotCardDiv.textContent = '?';
-    
+
     // Get absolute positions for animation start and end points
     const deckRect = deckPile.getBoundingClientRect();
     const playerRect = playerCardDiv.getBoundingClientRect();
     const robotRect = robotCardDiv.getBoundingClientRect();
-    // We append to document.body, so we need offsets relative to the body's top-left corner
-    const bodyRect = document.body.getBoundingClientRect(); 
+    const bodyRect = document.body.getBoundingClientRect();
 
     // Create animating cards and set their initial position relative to the body
     const animatedPlayerCard = createAnimatedCard(deckRect, bodyRect);
@@ -107,16 +108,11 @@ function drawCards() {
     void animatedPlayerCard.offsetWidth;
     void animatedRobotCard.offsetWidth;
 
-    // Calculate translation distances from the animated card's *current absolute position*
-    // to the target card's *absolute position*.
-    // Since the animated cards are already placed at deckRect.left/top,
-    // the translation is simply the difference between target and deck's coordinates.
     const playerDx = playerRect.left - deckRect.left;
     const playerDy = playerRect.top - deckRect.top;
     const robotDx = robotRect.left - deckRect.left;
     const robotDy = robotRect.top - deckRect.top;
-    
-    // Apply animation classes with CSS variables for target positions
+
     animatedPlayerCard.style.setProperty('--end-x', `${playerDx}px`);
     animatedPlayerCard.style.setProperty('--end-y', `${playerDy}px`);
     animatedPlayerCard.classList.add('animate-player-card');
@@ -193,6 +189,7 @@ function drawCards() {
 
         setTimeout(() => {
             isDrawing = false;
+            // Only re-enable draw button if game is NOT over
             if (deck.length > 1 && drawButton) {
                 drawButton.disabled = false;
             }
@@ -209,7 +206,7 @@ function createAnimatedCard(deckRect, bodyRect) {
     // Position the card absolutely on the screen where the deck is, relative to the body's scroll position
     card.style.left = `${deckRect.left - bodyRect.left}px`;
     card.style.top = `${deckRect.top - bodyRect.top}px`;
-    
+
     return card;
 }
 
@@ -243,21 +240,34 @@ function updateUI() {
 }
 
 function endGame() {
-    if (drawButton) drawButton.style.display = 'none';
-    if (resetButton) resetButton.style.display = 'block';
+    if (drawButton) drawButton.style.display = 'none'; // Hide draw button
+    if (resetButton) resetButton.style.display = 'block'; // Show reset button
 
     let finalMessage = "Game Over! ";
     if (playerScore > robotScore) {
         finalMessage += "You are the CHAMPION!";
+        if (roundMessage) roundMessage.classList.remove('loser', 'tie'); // Clear previous round's classes
         if (roundMessage) roundMessage.classList.add('winner');
     } else if (robotScore > playerScore) {
         finalMessage += "The Robot is the CHAMPION!";
+        if (roundMessage) roundMessage.classList.remove('winner', 'tie'); // Clear previous round's classes
         if (roundMessage) roundMessage.classList.add('loser');
     } else {
         finalMessage += "It's a DRAW!";
+        if (roundMessage) roundMessage.classList.remove('winner', 'loser'); // Clear previous round's classes
         if (roundMessage) roundMessage.classList.add('tie');
     }
-    if (roundMessage) roundMessage.textContent = finalMessage;
+    if (roundMessage) roundMessage.textContent = finalMessage; // Update message text
+    
+    // Also clear the cards themselves when the game ends
+    if (playerCardDiv) {
+        playerCardDiv.textContent = '?';
+        playerCardDiv.className = 'card empty';
+    }
+    if (robotCardDiv) {
+        robotCardDiv.textContent = '?';
+        robotCardDiv.className = 'card empty';
+    }
 }
 
 // --- Event Listeners ---
