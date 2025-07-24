@@ -1,4 +1,4 @@
-// DOM Elements - These are now assumed to be globally accessible
+// DOM Elements
 const startScreen = document.getElementById('start-screen');
 const gameScreen = document.getElementById('game-screen');
 const playOfflineBtn = document.getElementById('play-offline');
@@ -22,11 +22,11 @@ let isDrawing = false; // Prevents spamming draw action
 // --- Screen Management ---
 function showScreen(screenToShow) {
     // Hide all screens first
-    startScreen.classList.remove('active');
-    gameScreen.classList.remove('active');
+    if (startScreen) startScreen.classList.remove('active');
+    if (gameScreen) gameScreen.classList.remove('active');
 
     // Then show the desired screen
-    screenToShow.classList.add('active');
+    if (screenToShow) screenToShow.classList.add('active');
 }
 
 // --- Game Initialization ---
@@ -51,14 +51,20 @@ function startGame() {
     updateUI();
     showScreen(gameScreen); // Use the new screen management function
     
-    drawButton.style.display = 'block'; // Make draw button visible
-    resetButton.style.display = 'none'; // Keep reset button hidden until game ends
+    if (drawButton) drawButton.style.display = 'block'; // Make draw button visible
+    if (resetButton) resetButton.style.display = 'none'; // Keep reset button hidden until game ends
 
-    roundMessage.textContent = '';
-    playerCardDiv.textContent = '?';
-    robotCardDiv.textContent = '?';
-    playerCardDiv.className = 'card empty';
-    robotCardDiv.className = 'card empty';
+    if (roundMessage) roundMessage.textContent = '';
+    
+    // Ensure initial card state is empty to allow first animation
+    if (playerCardDiv) {
+        playerCardDiv.textContent = '?';
+        playerCardDiv.className = 'card empty';
+    }
+    if (robotCardDiv) {
+        robotCardDiv.textContent = '?';
+        robotCardDiv.className = 'card empty';
+    }
 }
 
 // --- Game Logic ---
@@ -70,14 +76,14 @@ function drawCards() {
 
     // Set flag to true and disable the button to start cooldown
     isDrawing = true;
-    drawButton.disabled = true;
+    if (drawButton) drawButton.disabled = true;
 
     // Check if deck has enough cards for two draws
     if (deck.length <= 1) {
         endGame();
         // Reset isDrawing and enable button if game ends immediately
         isDrawing = false;
-        drawButton.disabled = false;
+        if (drawButton) drawButton.disabled = false;
         return;
     }
 
@@ -102,14 +108,16 @@ function drawCards() {
         message = "It's a tie! No points awarded this round.";
     }
 
-    roundMessage.textContent = message;
-    roundMessage.classList.remove('winner', 'loser', 'tie');
-    if (winner === 'player') {
-        roundMessage.classList.add('winner');
-    } else if (winner === 'robot') {
-        roundMessage.classList.add('loser');
-    } else {
-        roundMessage.classList.add('tie');
+    if (roundMessage) {
+        roundMessage.textContent = message;
+        roundMessage.classList.remove('winner', 'loser', 'tie');
+        if (winner === 'player') {
+            roundMessage.classList.add('winner');
+        } else if (winner === 'robot') {
+            roundMessage.classList.add('loser');
+        } else {
+            roundMessage.classList.add('tie');
+        }
     }
 
     updateUI();
@@ -118,16 +126,27 @@ function drawCards() {
     setTimeout(() => {
         isDrawing = false;
         // Only enable if the game hasn't ended already
-        if (deck.length > 1) {
+        if (deck.length > 1 && drawButton) {
             drawButton.disabled = false;
         }
     }, 1000); // 1000 milliseconds = 1 second
 }
 
 function displayCard(cardElement, value) {
-    cardElement.textContent = value;
-    cardElement.classList.remove('empty', 'negative', 'positive', 'zero', 'mega');
+    if (!cardElement) return; // Add a check here as well
 
+    // Temporarily remove content and classes to ensure animation re-triggers
+    cardElement.textContent = '';
+    cardElement.className = 'card empty'; // Reset to empty state
+
+    // Force a reflow/re-render to apply the reset
+    // This is a common trick to make CSS animations play from the start every time
+    void cardElement.offsetWidth;
+
+    // Now set the new value and classes
+    cardElement.textContent = value;
+    
+    // Add classes based on value (same as before)
     if (value === 100) {
         cardElement.classList.add('mega');
     } else if (value < 0) {
@@ -136,38 +155,41 @@ function displayCard(cardElement, value) {
         cardElement.classList.add('positive');
     } else if (value === 0) {
         cardElement.classList.add('zero');
+    } else {
+        // For any other value, remove 'empty' to trigger animation
+        cardElement.classList.remove('empty');
     }
 }
 
 function updateUI() {
-    playerScoreSpan.textContent = playerScore;
-    robotScoreSpan.textContent = robotScore;
-    cardsLeftSpan.textContent = deck.length;
+    if (playerScoreSpan) playerScoreSpan.textContent = playerScore;
+    if (robotScoreSpan) robotScoreSpan.textContent = robotScore;
+    if (cardsLeftSpan) cardsLeftSpan.textContent = deck.length;
 }
 
 function endGame() {
-    drawButton.style.display = 'none'; // Hide draw button
-    resetButton.style.display = 'block'; // Show reset button
+    if (drawButton) drawButton.style.display = 'none'; // Hide draw button
+    if (resetButton) resetButton.style.display = 'block'; // Show reset button
 
     let finalMessage = "Game Over! ";
     if (playerScore > robotScore) {
         finalMessage += "You are the CHAMPION!";
-        roundMessage.classList.add('winner');
+        if (roundMessage) roundMessage.classList.add('winner');
     } else if (robotScore > playerScore) {
         finalMessage += "The Robot is the CHAMPION!";
-        roundMessage.classList.add('loser');
+        if (roundMessage) roundMessage.classList.add('loser');
     } else {
         finalMessage += "It's a DRAW!";
-        roundMessage.classList.add('tie');
+        if (roundMessage) roundMessage.classList.add('tie');
     }
-    roundMessage.textContent = finalMessage;
+    if (roundMessage) roundMessage.textContent = finalMessage;
 }
 
 // --- Event Listeners ---
 // These are added after all functions are defined
-playOfflineBtn.addEventListener('click', startGame);
-drawButton.addEventListener('click', drawCards);
-resetButton.addEventListener('click', startGame); // Reset button also starts a new game
+if (playOfflineBtn) playOfflineBtn.addEventListener('click', startGame);
+if (drawButton) drawButton.addEventListener('click', drawCards);
+if (resetButton) resetButton.addEventListener('click', startGame); // Reset button also starts a new game
 
-// Initial setup: Show the start screen when the script loads
-showScreen(startScreen);
+// Initial setup: Show the start screen
+if (startScreen) showScreen(startScreen);
