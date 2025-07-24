@@ -11,6 +11,7 @@ const robotCardDiv = document.getElementById('robot-card');
 const drawButton = document.getElementById('draw-button');
 const resetButton = document.getElementById('reset-button');
 const roundMessage = document.getElementById('round-message');
+const deckPile = document.getElementById('deck-pile'); // NEW ELEMENT REFERENCE
 
 // Game Variables
 let deck = [];
@@ -87,66 +88,148 @@ function drawCards() {
         return;
     }
 
-    const playerCard = deck.pop();
-    const robotCard = deck.pop();
+    const playerCardValue = deck.pop();
+    const robotCardValue = deck.pop();
 
-    displayCard(playerCardDiv, playerCard);
-    displayCard(robotCardDiv, robotCard);
+    // Hide the final card divs temporarily by setting them empty
+    if (playerCardDiv) playerCardDiv.classList.add('empty');
+    if (robotCardDiv) robotCardDiv.classList.add('empty');
+    if (playerCardDiv) playerCardDiv.textContent = '?';
+    if (robotCardDiv) robotCardDiv.textContent = '?';
+    
+    // Get positions for animation
+    // Rectangles give absolute position relative to viewport.
+    // We need to calculate translation relative to the parent (gameScreen)
+    const deckRect = deckPile.getBoundingClientRect();
+    const playerRect = playerCardDiv.getBoundingClientRect();
+    const robotRect = robotCardDiv.getBoundingClientRect();
+    const gameScreenRect = gameScreen.getBoundingClientRect();
 
-    let message = '';
-    let winner = null;
+    // Create animating cards
+    const animatedPlayerCard = createAnimatedCard(deckRect, gameScreenRect);
+    const animatedRobotCard = createAnimatedCard(deckRect, gameScreenRect);
 
-    if (playerCard > robotCard) {
-        playerScore++;
-        message = "You win this round!";
-        winner = 'player';
-    } else if (robotCard > playerCard) {
-        robotScore++;
-        message = "Robot wins this round!";
-        winner = 'robot';
-    } else {
-        message = "It's a tie! No points awarded this round.";
-    }
+    // Append to gameScreen to keep within game bounds and ensure relative positioning works
+    gameScreen.appendChild(animatedPlayerCard);
+    gameScreen.appendChild(animatedRobotCard);
 
-    if (roundMessage) {
-        roundMessage.textContent = message;
-        roundMessage.classList.remove('winner', 'loser', 'tie');
-        if (winner === 'player') {
-            roundMessage.classList.add('winner');
-        } else if (winner === 'robot') {
-            roundMessage.classList.add('loser');
-        } else {
-            roundMessage.classList.add('tie');
-        }
-    }
+    // Force reflow before adding animation classes to ensure animation triggers from start
+    // This is a common trick to make CSS animations play from the start every time
+    void animatedPlayerCard.offsetWidth;
+    void animatedRobotCard.offsetWidth;
 
-    updateUI();
+    // Calculate translation distances relative to the animated card's starting point (which is over deck-pile)
+    // The CSS animation expects the difference from its starting position (0,0) within its parent.
+    const playerDx = playerRect.left - animatedPlayerCard.getBoundingClientRect().left;
+    const playerDy = playerRect.top - animatedPlayerCard.getBoundingClientRect().top;
+    const robotDx = robotRect.left - animatedRobotCard.getBoundingClientRect().left;
+    const robotDy = robotRect.top - animatedRobotCard.getBoundingClientRect().top;
+    
+    // Apply animation classes with CSS variables for target positions
+    animatedPlayerCard.style.setProperty('--end-x', `${playerDx}px`);
+    animatedPlayerCard.style.setProperty('--end-y', `${playerDy}px`);
+    animatedPlayerCard.classList.add('animate-player-card');
 
-    // After 1 second, enable the button again and reset the flag
+    animatedRobotCard.style.setProperty('--end-x', `${robotDx}px`);
+    animatedRobotCard.style.setProperty('--end-y', `${robotDy}px`);
+    animatedRobotCard.classList.add('animate-robot-card');
+
+    // Function to handle card content reveal and cleanup after animation
+    const animationDuration = 1000; // Match CSS animation duration (1s)
+
+    // Reveal player card value halfway through animation
     setTimeout(() => {
-        isDrawing = false;
-        // Only enable if the game hasn't ended already
-        if (deck.length > 1 && drawButton) {
-            drawButton.disabled = false;
+        if (animatedPlayerCard) { // Check if element still exists
+            animatedPlayerCard.textContent = playerCardValue;
+            displayCardContentClasses(animatedPlayerCard, playerCardValue); // Apply colors/mega
         }
-    }, 1000); // 1000 milliseconds = 1 second
+    }, animationDuration / 2);
+
+    // Reveal robot card value halfway through animation
+    setTimeout(() => {
+        if (animatedRobotCard) { // Check if element still exists
+            animatedRobotCard.textContent = robotCardValue;
+            displayCardContentClasses(animatedRobotCard, robotCardValue); // Apply colors/mega
+        }
+    }, animationDuration / 2);
+
+    // Wait for animations to finish before updating actual cards and cleaning up
+    Promise.all([
+        new Promise(resolve => {
+            if (animatedPlayerCard) animatedPlayerCard.addEventListener('animationend', resolve, {once: true});
+            else resolve(); // Resolve immediately if card not found (error state)
+        }),
+        new Promise(resolve => {
+            if (animatedRobotCard) animatedRobotCard.addEventListener('animationend', resolve, {once: true});
+            else resolve(); // Resolve immediately if card not found (error state)
+        })
+    ]).then(() => {
+        // After animations complete:
+        // 1. Remove animated cards from DOM
+        if (animatedPlayerCard) animatedPlayerCard.remove();
+        if (animatedRobotCard) animatedRobotCard.remove();
+
+        // 2. Update and display the actual player/robot card divs
+        displayCard(playerCardDiv, playerCardValue); // This function now just updates content and classes
+        displayCard(robotCardDiv, robotCardValue);
+
+        let message = '';
+        let winner = null;
+
+        if (playerCardValue > robotCardValue) {
+            playerScore++;
+            message = "You win this round!";
+            winner = 'player';
+        } else if (robotCardValue > playerCardValue) {
+            robotScore++;
+            message = "Robot wins this round!";
+            winner = 'robot';
+        } else {
+            message = "It's a tie! No points awarded this round.";
+        }
+
+        if (roundMessage) {
+            roundMessage.textContent = message;
+            roundMessage.classList.remove('winner', 'loser', 'tie');
+            if (winner === 'player') {
+                roundMessage.classList.add('winner');
+            } else if (winner === 'robot') {
+                roundMessage.classList.add('loser');
+            } else {
+                roundMessage.classList.add('tie');
+            }
+        }
+
+        updateUI();
+
+        // Re-enable draw button after cooldown
+        setTimeout(() => {
+            isDrawing = false;
+            if (deck.length > 1 && drawButton) {
+                drawButton.disabled = false;
+            }
+        }, 1000); // 1000 milliseconds = 1 second cooldown
+    });
 }
 
-function displayCard(cardElement, value) {
-    if (!cardElement) return; // Add a check here as well
+// Helper function to create an animated card
+function createAnimatedCard(deckRect, gameScreenRect) {
+    const card = document.createElement('div');
+    card.classList.add('animated-card');
+    card.textContent = '?'; // Start with a question mark
 
-    // Temporarily remove content and classes to ensure animation re-triggers
-    cardElement.textContent = '';
-    cardElement.className = 'card empty'; // Reset to empty state
-
-    // Force a reflow/re-render to apply the reset
-    // This is a common trick to make CSS animations play from the start every time
-    void cardElement.offsetWidth;
-
-    // Now set the new value and classes
-    cardElement.textContent = value;
+    // Position relative to the game-screen
+    // The animated card starts exactly where the deckPile is, relative to the gameScreen
+    card.style.left = `${deckRect.left - gameScreenRect.left}px`;
+    card.style.top = `${deckRect.top - gameScreenRect.top}px`;
     
-    // Add classes based on value (same as before)
+    return card;
+}
+
+// Helper function to apply color/mega classes to a card element
+function displayCardContentClasses(cardElement, value) {
+    if (!cardElement) return;
+    cardElement.classList.remove('empty', 'negative', 'positive', 'zero', 'mega');
     if (value === 100) {
         cardElement.classList.add('mega');
     } else if (value < 0) {
@@ -155,11 +238,19 @@ function displayCard(cardElement, value) {
         cardElement.classList.add('positive');
     } else if (value === 0) {
         cardElement.classList.add('zero');
-    } else {
-        // For any other value, remove 'empty' to trigger animation
-        cardElement.classList.remove('empty');
     }
 }
+
+
+// Modified displayCard function - now only updates the content and classes of a *static* card
+function displayCard(cardElement, value) {
+    if (!cardElement) return;
+
+    cardElement.textContent = value; // Set the actual value
+    displayCardContentClasses(cardElement, value); // Apply color/mega classes
+    cardElement.classList.remove('empty'); // Remove empty class if it was there
+}
+
 
 function updateUI() {
     if (playerScoreSpan) playerScoreSpan.textContent = playerScore;
