@@ -11,7 +11,6 @@ body {
 }
 
 .screen {
-    /* screens are always flex, but visibility controlled by JS */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -22,7 +21,6 @@ body {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
     min-width: 400px;
     text-align: center;
-    /* Transition for smooth fading */
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
@@ -34,7 +32,6 @@ body {
     visibility: visible;
     position: static; /* Takes up space when active */
 }
-
 
 h1 {
     color: #61dafb;
@@ -73,7 +70,6 @@ button:disabled {
     cursor: not-allowed;
 }
 
-/* Game Screen Specific Styles */
 .header {
     display: flex;
     justify-content: space-around;
@@ -88,12 +84,15 @@ button:disabled {
     justify-content: space-around;
     width: 100%;
     margin-bottom: 30px;
+    position: relative; /* Added for positioning animated cards relative to it */
 }
 
 .player-area, .opponent-area {
     display: flex;
     flex-direction: column;
     align-items: center;
+    position: relative; /* Ensure these are also positioned */
+    z-index: 1; /* Keep them above the deck pile */
 }
 
 .card {
@@ -110,7 +109,8 @@ button:disabled {
     color: #333;
     box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
     margin-top: 10px;
-    transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+    transition: background-color 0.3s ease, color 0.3s ease; /* Removed transform from here */
+    transform-style: preserve-3d; /* For 3D rotations */
 }
 
 .card.empty {
@@ -119,7 +119,6 @@ button:disabled {
     font-size: 1.5em;
 }
 
-/* Styling for negative and 100 cards */
 .card.negative {
     background-color: #f44336;
     color: white;
@@ -160,19 +159,100 @@ button:disabled {
     color: #ffeb3b;
 }
 
-/* New: Keyframes for card dealing animation */
-@keyframes dealCard {
-    from {
+/* NEW: Deck Pile Styling */
+#deck-pile {
+    width: 100px;
+    height: 150px;
+    background-color: #f0f0f0; /* Color of a card */
+    border: 2px solid #555;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #333;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+    margin-top: 10px;
+    position: absolute; /* Position it in the center */
+    left: 50%;
+    transform: translateX(-50%); /* Center horizontally */
+    z-index: 0; /* Below actual cards */
+    background: linear-gradient(to bottom, #f0f0f0 0%, #d0d0d0 100%); /* Stacked card look */
+    text-align: center;
+    line-height: 150px; /* Vertically center the text if any */
+    color: #555;
+}
+
+#deck-pile::after {
+    content: 'DECK'; /* Or a card icon */
+    font-size: 1em;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* NEW: Styles for the animating cards */
+.animated-card {
+    position: absolute; /* Will be absolutely positioned over the deck */
+    width: 100px;
+    height: 150px;
+    background-color: #f0f0f0;
+    border: 2px solid #555;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2.5em;
+    font-weight: bold;
+    color: #333;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+    z-index: 10; /* Make sure it's on top during animation */
+    transform-style: preserve-3d; /* For 3D rotations */
+    backface-visibility: hidden; /* Hide back during flip if needed */
+}
+
+/* NEW: Keyframes for slide and flip animation */
+@keyframes slide-and-flip-player {
+    0% {
         opacity: 0;
-        transform: translateY(-20px) scale(0.8);
+        transform: translate(0, 0) rotateY(0deg); /* Start at deck pile (relative to animated card's initial position) */
     }
-    to {
+    1% {
+        opacity: 1; /* Become visible immediately */
+    }
+    50% {
+        transform: translate(var(--end-x, 0), var(--end-y, 0)) rotateY(180deg); /* Halfway to target, half-flipped */
+    }
+    100% {
+        transform: translate(var(--end-x, 0), var(--end-y, 0)) rotateY(360deg); /* End at target, fully flipped */
         opacity: 1;
-        transform: translateY(0) scale(1);
     }
 }
 
-/* New: Apply animation only when card is not empty */
-.card:not(.empty) {
-    animation: dealCard 0.4s ease-out forwards;
+@keyframes slide-and-flip-robot {
+    0% {
+        opacity: 0;
+        transform: translate(0, 0) rotateY(0deg); /* Start at deck pile (relative to animated card's initial position) */
+    }
+    1% {
+        opacity: 1; /* Become visible immediately */
+    }
+    50% {
+        transform: translate(var(--end-x, 0), var(--end-y, 0)) rotateY(180deg); /* Halfway to target, half-flipped */
+    }
+    100% {
+        transform: translate(var(--end-x, 0), var(--end-y, 0)) rotateY(360deg); /* End at target, fully flipped */
+        opacity: 1;
+    }
+}
+
+/* Classes to apply animations */
+.animate-player-card {
+    animation: slide-and-flip-player 1s ease-in-out forwards;
+}
+
+.animate-robot-card {
+    animation: slide-and-flip-robot 1s ease-in-out forwards;
 }
