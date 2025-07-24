@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>High Card Showdown</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="start-screen" class="screen">
+        <h1>High Card Showdown</h1>
+        <p>A game where the higher card wins!</p>
+        <button id="play-offline">Play Offline (vs. Robot)</button>
+        <button id="play-online" disabled>Play Online (Coming Soon!)</button>
+    </div>
+
+    <div id="game-screen" class="screen">
+        <div class="header">
+            <p>Cards Left: <span id="cards-left">24</span></p>
+            <p>Your Score: <span id="player-score">0</span></p>
+            <p>Robot Score: <span id="robot-score">0</span></p>
+        </div>
+
+        <div class="game-area">
+            <div class="player-area">
+                <h2>Your Card:</h2>
+                <div id="player-card" class="card empty">?</div>
+            </div>
+            <div class="opponent-area">
+                <h2>Robot's Card:</h2>
+                <div id="robot-card" class="card empty">?</div>
+            </div>
+        </div>
+
+        <p id="round-message" class="message"></p>
+        <button id="draw-button">Draw Cards</button>
+        <button id="reset-button">Play Again</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
