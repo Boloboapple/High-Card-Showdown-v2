@@ -98,12 +98,12 @@ function drawCards() {
     if (robotCardDiv) robotCardDiv.textContent = '?';
     
     // Get positions for animation
-    // Rectangles give absolute position relative to viewport.
-    // We need to calculate translation relative to the parent (gameScreen)
+    // getBoundingClientRect() gives absolute position relative to viewport.
+    // We need to calculate translation relative to the parent (gameScreen) for animated cards.
     const deckRect = deckPile.getBoundingClientRect();
     const playerRect = playerCardDiv.getBoundingClientRect();
     const robotRect = robotCardDiv.getBoundingClientRect();
-    const gameScreenRect = gameScreen.getBoundingClientRect();
+    const gameScreenRect = gameScreen.getBoundingClientRect(); // Parent for animated cards
 
     // Create animating cards
     const animatedPlayerCard = createAnimatedCard(deckRect, gameScreenRect);
@@ -119,7 +119,6 @@ function drawCards() {
     void animatedRobotCard.offsetWidth;
 
     // Calculate translation distances relative to the animated card's starting point (which is over deck-pile)
-    // The CSS animation expects the difference from its starting position (0,0) within its parent.
     const playerDx = playerRect.left - animatedPlayerCard.getBoundingClientRect().left;
     const playerDy = playerRect.top - animatedPlayerCard.getBoundingClientRect().top;
     const robotDx = robotRect.left - animatedRobotCard.getBoundingClientRect().left;
@@ -219,7 +218,7 @@ function createAnimatedCard(deckRect, gameScreenRect) {
     card.textContent = '?'; // Start with a question mark
 
     // Position relative to the game-screen
-    // The animated card starts exactly where the deckPile is, relative to the gameScreen
+    // The animated card starts exactly where the deckPile is, relative to the gameScreen's top-left corner
     card.style.left = `${deckRect.left - gameScreenRect.left}px`;
     card.style.top = `${deckRect.top - gameScreenRect.top}px`;
     
