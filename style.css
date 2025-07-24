@@ -1,6 +1,6 @@
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    display: flex;
+    display: flex; /* Keep for potential fallback or overall page centering */
     justify-content: center;
     align-items: center;
     min-height: 100vh;
@@ -10,6 +10,7 @@ body {
     overflow: hidden; /* Prevent scrollbars from animated cards */
 }
 
+/* Updated .screen for universal centering */
 .screen {
     display: flex;
     flex-direction: column;
@@ -24,13 +25,18 @@ body {
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
-    position: absolute; /* Allows screens to occupy the same space */
+
+    /* Absolute centering within the viewport */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Centers based on its own size */
 }
 
 .screen.active {
     opacity: 1;
     visibility: visible;
-    position: static;
+    /* REMOVED: position: static; - keep it absolute for consistent centering */
 }
 
 h1 {
@@ -79,13 +85,53 @@ button:disabled {
     font-weight: bold;
 }
 
+/* Updated .game-area for vertical stacking of deck and cards */
 .game-area {
     display: flex;
-    justify-content: space-around;
-    width: 100%;
+    flex-direction: column; /* Stack children (deck, card-areas-wrapper) vertically */
+    align-items: center;   /* Center children horizontally */
+    width: 100%; /* Spans the full width of its parent (.screen) */
     margin-bottom: 30px;
-    position: relative; /* Essential for positioning animated cards relative to it */
-    /* Removed min-height and align-items here to revert layout */
+    position: relative; /* Crucial for animated cards' parenting */
+}
+
+/* Deck Pile Styling - Now a flex item within .game-area (column direction) */
+#deck-pile {
+    width: 100px;
+    height: 150px;
+    background-color: #f0f0f0;
+    border: 2px solid #555;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #333;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    margin-bottom: 20px; /* Space between deck and cards below it */
+    z-index: 0; /* Ensures it's behind animating cards (which have z-index 10) */
+    background: linear-gradient(to bottom, #f0f0f0 0%, #d0d0d0 100%);
+    text-align: center;
+    line-height: 150px;
+    color: #555;
+    /* Removed absolute positioning: position, left, top, transform: translateX */
+}
+
+#deck-pile::after {
+    content: 'DECK';
+    font-size: 1em;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* New wrapper for player and robot card areas */
+.card-areas-wrapper {
+    display: flex;
+    justify-content: space-around; /* Distribute space horizontally between player and robot areas */
+    width: 100%; /* Spans the width of .game-area */
 }
 
 .player-area, .opponent-area {
@@ -160,44 +206,9 @@ button:disabled {
     color: #ffeb3b;
 }
 
-/* Deck Pile Styling - Reverting to original horizontal centering */
-#deck-pile {
-    width: 100px;
-    height: 150px;
-    background-color: #f0f0f0;
-    border: 2px solid #555;
-    border-radius: 8px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.5em;
-    font-weight: bold;
-    color: #333;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    margin-top: 10px; /* Keep this to align with player/robot cards */
-    position: absolute; /* Absolute within game-area */
-    left: 50%;
-    transform: translateX(-50%); /* Centered horizontally */
-    z-index: 0;
-    background: linear-gradient(to bottom, #f0f0f0 0%, #d0d0d0 100%);
-    text-align: center;
-    line-height: 150px;
-    color: #555;
-    /* Removed 'top' property to allow it to be positioned by flexbox */
-}
-
-#deck-pile::after {
-    content: 'DECK';
-    font-size: 1em;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
-
 /* Styles for the animating cards */
 .animated-card {
-    position: absolute; /* These will be positioned via JS */
+    position: absolute; /* These will be positioned via JS relative to the body */
     width: 100px;
     height: 150px;
     background-color: #f0f0f0;
@@ -212,10 +223,9 @@ button:disabled {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     z-index: 10; /* Make sure it's on top during animation */
     transform-style: preserve-3d;
-    /* No initial top/left needed here, JS will set them */
 }
 
-/* Keyframes for slide and flip animation - REVERTED TO SIMPLER TRANSLATE */
+/* Keyframes for slide and flip animation */
 @keyframes slide-and-flip-player {
     0% {
         opacity: 1;
@@ -251,12 +261,4 @@ button:disabled {
 
 .animate-robot-card {
     animation: slide-and-flip-robot 1s ease-in-out forwards;
-}
-
-/* Reverting game-screen style */
-#game-screen {
-    /* Removed min-height and justify-content */
-    /* Removed padding-top */
-    /* Ensure it has a position: relative; if its children are absolute */
-    position: relative; /* Already relative, keeping it */
 }
