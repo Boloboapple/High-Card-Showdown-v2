@@ -12,7 +12,7 @@ body {
 
 .screen {
     /* screens are always flex, but visibility controlled by JS */
-    display: flex; 
+    display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -158,4 +158,21 @@ button:disabled {
 
 .tie {
     color: #ffeb3b;
+}
+
+/* New: Keyframes for card dealing animation */
+@keyframes dealCard {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* New: Apply animation only when card is not empty */
+.card:not(.empty) {
+    animation: dealCard 0.4s ease-out forwards;
 }
