@@ -95,7 +95,7 @@ button:disabled {
     position: relative; /* Crucial for animated cards' parenting */
 }
 
-/* Deck Pile Styling - Now a flex item within .game-area (column direction) */
+/* Deck Pile Styling - NOW HAS position: relative; */
 #deck-pile {
     width: 100px;
     height: 150px;
@@ -115,7 +115,8 @@ button:disabled {
     text-align: center;
     line-height: 150px;
     color: #555;
-    /* Removed absolute positioning: position, left, top, transform: translateX */
+    /* Added position: relative; to correctly position ::after content */
+    position: relative; 
 }
 
 #deck-pile::after {
