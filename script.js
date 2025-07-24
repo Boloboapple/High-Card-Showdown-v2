@@ -11,22 +11,19 @@ const robotCardDiv = document.getElementById('robot-card');
 const drawButton = document.getElementById('draw-button');
 const resetButton = document.getElementById('reset-button');
 const roundMessage = document.getElementById('round-message');
-const deckPile = document.getElementById('deck-pile'); // NEW ELEMENT REFERENCE
+const deckPile = document.getElementById('deck-pile');
 
 // Game Variables
 let deck = [];
 let playerScore = 0;
 let robotScore = 0;
 const TOTAL_CARDS = 24;
-let isDrawing = false; // Prevents spamming draw action
+let isDrawing = false;
 
 // --- Screen Management ---
 function showScreen(screenToShow) {
-    // Hide all screens first
     if (startScreen) startScreen.classList.remove('active');
     if (gameScreen) gameScreen.classList.remove('active');
-
-    // Then show the desired screen
     if (screenToShow) screenToShow.classList.add('active');
 }
 
@@ -38,7 +35,6 @@ function createDeck() {
     }
     deck.push(100);
 
-    // Shuffle the deck (Fisher-Yates algorithm)
     for (let i = deck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [deck[i], deck[j]] = [deck[j], deck[i]];
@@ -50,14 +46,13 @@ function startGame() {
     playerScore = 0;
     robotScore = 0;
     updateUI();
-    showScreen(gameScreen); // Use the new screen management function
+    showScreen(gameScreen);
     
-    if (drawButton) drawButton.style.display = 'block'; // Make draw button visible
-    if (resetButton) resetButton.style.display = 'none'; // Keep reset button hidden until game ends
+    if (drawButton) drawButton.style.display = 'block';
+    if (resetButton) resetButton.style.display = 'none';
 
     if (roundMessage) roundMessage.textContent = '';
     
-    // Ensure initial card state is empty to allow first animation
     if (playerCardDiv) {
         playerCardDiv.textContent = '?';
         playerCardDiv.className = 'card empty';
@@ -70,19 +65,15 @@ function startGame() {
 
 // --- Game Logic ---
 function drawCards() {
-    // If a draw is already in progress, exit the function immediately
     if (isDrawing) {
         return;
     }
 
-    // Set flag to true and disable the button to start cooldown
     isDrawing = true;
     if (drawButton) drawButton.disabled = true;
 
-    // Check if deck has enough cards for two draws
     if (deck.length <= 1) {
         endGame();
-        // Reset isDrawing and enable button if game ends immediately
         isDrawing = false;
         if (drawButton) drawButton.disabled = false;
         return;
@@ -97,32 +88,33 @@ function drawCards() {
     if (playerCardDiv) playerCardDiv.textContent = '?';
     if (robotCardDiv) robotCardDiv.textContent = '?';
     
-    // Get positions for animation
-    // getBoundingClientRect() gives absolute position relative to viewport.
-    // We need to calculate translation relative to the parent (gameScreen) for animated cards.
+    // Get absolute positions for animation start and end points
     const deckRect = deckPile.getBoundingClientRect();
     const playerRect = playerCardDiv.getBoundingClientRect();
     const robotRect = robotCardDiv.getBoundingClientRect();
-    const gameScreenRect = gameScreen.getBoundingClientRect(); // Parent for animated cards
+    // We append to document.body, so we need offsets relative to the body's top-left corner
+    const bodyRect = document.body.getBoundingClientRect(); 
 
-    // Create animating cards
-    const animatedPlayerCard = createAnimatedCard(deckRect, gameScreenRect);
-    const animatedRobotCard = createAnimatedCard(deckRect, gameScreenRect);
+    // Create animating cards and set their initial position relative to the body
+    const animatedPlayerCard = createAnimatedCard(deckRect, bodyRect);
+    const animatedRobotCard = createAnimatedCard(deckRect, bodyRect);
 
-    // Append to gameScreen to keep within game bounds and ensure relative positioning works
-    gameScreen.appendChild(animatedPlayerCard);
-    gameScreen.appendChild(animatedRobotCard);
+    // Append to body so they can move freely across the entire viewport
+    document.body.appendChild(animatedPlayerCard);
+    document.body.appendChild(animatedRobotCard);
 
     // Force reflow before adding animation classes to ensure animation triggers from start
-    // This is a common trick to make CSS animations play from the start every time
     void animatedPlayerCard.offsetWidth;
     void animatedRobotCard.offsetWidth;
 
-    // Calculate translation distances relative to the animated card's starting point (which is over deck-pile)
-    const playerDx = playerRect.left - animatedPlayerCard.getBoundingClientRect().left;
-    const playerDy = playerRect.top - animatedPlayerCard.getBoundingClientRect().top;
-    const robotDx = robotRect.left - animatedRobotCard.getBoundingClientRect().left;
-    const robotDy = robotRect.top - animatedRobotCard.getBoundingClientRect().top;
+    // Calculate translation distances from the animated card's *current absolute position*
+    // to the target card's *absolute position*.
+    // Since the animated cards are already placed at deckRect.left/top,
+    // the translation is simply the difference between target and deck's coordinates.
+    const playerDx = playerRect.left - deckRect.left;
+    const playerDy = playerRect.top - deckRect.top;
+    const robotDx = robotRect.left - deckRect.left;
+    const robotDy = robotRect.top - deckRect.top;
     
     // Apply animation classes with CSS variables for target positions
     animatedPlayerCard.style.setProperty('--end-x', `${playerDx}px`);
@@ -133,43 +125,41 @@ function drawCards() {
     animatedRobotCard.style.setProperty('--end-y', `${robotDy}px`);
     animatedRobotCard.classList.add('animate-robot-card');
 
-    // Function to handle card content reveal and cleanup after animation
-    const animationDuration = 1000; // Match CSS animation duration (1s)
+    const animationDuration = 1000;
 
     // Reveal player card value halfway through animation
     setTimeout(() => {
-        if (animatedPlayerCard) { // Check if element still exists
+        if (animatedPlayerCard) {
             animatedPlayerCard.textContent = playerCardValue;
-            displayCardContentClasses(animatedPlayerCard, playerCardValue); // Apply colors/mega
+            displayCardContentClasses(animatedPlayerCard, playerCardValue);
         }
     }, animationDuration / 2);
 
     // Reveal robot card value halfway through animation
     setTimeout(() => {
-        if (animatedRobotCard) { // Check if element still exists
+        if (animatedRobotCard) {
             animatedRobotCard.textContent = robotCardValue;
-            displayCardContentClasses(animatedRobotCard, robotCardValue); // Apply colors/mega
+            displayCardContentClasses(animatedRobotCard, robotCardValue);
         }
     }, animationDuration / 2);
 
-    // Wait for animations to finish before updating actual cards and cleaning up
+    // Wait for animations to finish
     Promise.all([
         new Promise(resolve => {
             if (animatedPlayerCard) animatedPlayerCard.addEventListener('animationend', resolve, {once: true});
-            else resolve(); // Resolve immediately if card not found (error state)
+            else resolve();
         }),
         new Promise(resolve => {
             if (animatedRobotCard) animatedRobotCard.addEventListener('animationend', resolve, {once: true});
-            else resolve(); // Resolve immediately if card not found (error state)
+            else resolve();
         })
     ]).then(() => {
-        // After animations complete:
-        // 1. Remove animated cards from DOM
+        // Cleanup after animations
         if (animatedPlayerCard) animatedPlayerCard.remove();
         if (animatedRobotCard) animatedRobotCard.remove();
 
-        // 2. Update and display the actual player/robot card divs
-        displayCard(playerCardDiv, playerCardValue); // This function now just updates content and classes
+        // Update and display the actual player/robot card divs
+        displayCard(playerCardDiv, playerCardValue);
         displayCard(robotCardDiv, robotCardValue);
 
         let message = '';
@@ -201,26 +191,24 @@ function drawCards() {
 
         updateUI();
 
-        // Re-enable draw button after cooldown
         setTimeout(() => {
             isDrawing = false;
             if (deck.length > 1 && drawButton) {
                 drawButton.disabled = false;
             }
-        }, 1000); // 1000 milliseconds = 1 second cooldown
+        }, 1000);
     });
 }
 
-// Helper function to create an animated card
-function createAnimatedCard(deckRect, gameScreenRect) {
+// Helper function to create an animated card - sets initial position
+function createAnimatedCard(deckRect, bodyRect) {
     const card = document.createElement('div');
     card.classList.add('animated-card');
     card.textContent = '?'; // Start with a question mark
 
-    // Position relative to the game-screen
-    // The animated card starts exactly where the deckPile is, relative to the gameScreen's top-left corner
-    card.style.left = `${deckRect.left - gameScreenRect.left}px`;
-    card.style.top = `${deckRect.top - gameScreenRect.top}px`;
+    // Position the card absolutely on the screen where the deck is, relative to the body's scroll position
+    card.style.left = `${deckRect.left - bodyRect.left}px`;
+    card.style.top = `${deckRect.top - bodyRect.top}px`;
     
     return card;
 }
@@ -240,16 +228,13 @@ function displayCardContentClasses(cardElement, value) {
     }
 }
 
-
-// Modified displayCard function - now only updates the content and classes of a *static* card
+// Modified displayCard function - only updates static card content/classes
 function displayCard(cardElement, value) {
     if (!cardElement) return;
-
-    cardElement.textContent = value; // Set the actual value
-    displayCardContentClasses(cardElement, value); // Apply color/mega classes
-    cardElement.classList.remove('empty'); // Remove empty class if it was there
+    cardElement.textContent = value;
+    displayCardContentClasses(cardElement, value);
+    cardElement.classList.remove('empty');
 }
-
 
 function updateUI() {
     if (playerScoreSpan) playerScoreSpan.textContent = playerScore;
@@ -258,8 +243,8 @@ function updateUI() {
 }
 
 function endGame() {
-    if (drawButton) drawButton.style.display = 'none'; // Hide draw button
-    if (resetButton) resetButton.style.display = 'block'; // Show reset button
+    if (drawButton) drawButton.style.display = 'none';
+    if (resetButton) resetButton.style.display = 'block';
 
     let finalMessage = "Game Over! ";
     if (playerScore > robotScore) {
@@ -276,10 +261,9 @@ function endGame() {
 }
 
 // --- Event Listeners ---
-// These are added after all functions are defined
 if (playOfflineBtn) playOfflineBtn.addEventListener('click', startGame);
 if (drawButton) drawButton.addEventListener('click', drawCards);
-if (resetButton) resetButton.addEventListener('click', startGame); // Reset button also starts a new game
+if (resetButton) resetButton.addEventListener('click', startGame);
 
 // Initial setup: Show the start screen
 if (startScreen) showScreen(startScreen);
