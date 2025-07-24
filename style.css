@@ -1,6 +1,6 @@
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    display: flex; /* Keep for potential fallback or overall page centering */
+    display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
@@ -36,7 +36,6 @@ body {
 .screen.active {
     opacity: 1;
     visibility: visible;
-    /* REMOVED: position: static; - keep it absolute for consistent centering */
 }
 
 h1 {
@@ -95,7 +94,7 @@ button:disabled {
     position: relative; /* Crucial for animated cards' parenting */
 }
 
-/* Deck Pile Styling - NOW HAS position: relative; */
+/* Deck Pile Styling */
 #deck-pile {
     width: 100px;
     height: 150px;
@@ -115,8 +114,7 @@ button:disabled {
     text-align: center;
     line-height: 150px;
     color: #555;
-    /* Added position: relative; to correctly position ::after content */
-    position: relative; 
+    position: relative; /* Essential for correct positioning of ::after content */
 }
 
 #deck-pile::after {
@@ -188,11 +186,15 @@ button:disabled {
     box-shadow: 0 0 15px #9c27b0;
 }
 
+/* Ensure the message is always visible */
 .message {
     font-size: 1.3em;
     margin-top: 20px;
     min-height: 2em;
     font-weight: bold;
+    display: block; /* Ensures it's always part of the layout */
+    opacity: 1;     /* Ensures it's not transparent */
+    visibility: visible; /* Ensures it's not hidden */
 }
 
 .winner {
@@ -209,7 +211,7 @@ button:disabled {
 
 /* Styles for the animating cards */
 .animated-card {
-    position: absolute; /* These will be positioned via JS relative to the body */
+    position: absolute;
     width: 100px;
     height: 150px;
     background-color: #f0f0f0;
@@ -230,13 +232,13 @@ button:disabled {
 @keyframes slide-and-flip-player {
     0% {
         opacity: 1;
-        transform: translate(0, 0) rotateY(0deg); /* Starts at its initial absolute position (set by JS) */
+        transform: translate(0, 0) rotateY(0deg);
     }
     50% {
-        transform: translate(var(--end-x), var(--end-y)) rotateY(180deg); /* Halfway to target, half-flipped */
+        transform: translate(var(--end-x), var(--end-y)) rotateY(180deg);
     }
     100% {
-        transform: translate(var(--end-x), var(--end-y)) rotateY(360deg); /* End at target, fully flipped */
+        transform: translate(var(--end-x), var(--end-y)) rotateY(360deg);
         opacity: 1;
     }
 }
@@ -244,13 +246,13 @@ button:disabled {
 @keyframes slide-and-flip-robot {
     0% {
         opacity: 1;
-        transform: translate(0, 0) rotateY(0deg); /* Starts at its initial absolute position (set by JS) */
+        transform: translate(0, 0) rotateY(0deg);
     }
     50% {
-        transform: translate(var(--end-x), var(--end-y)) rotateY(180deg); /* Halfway to target, half-flipped */
+        transform: translate(var(--end-x), var(--end-y)) rotateY(180deg);
     }
     100% {
-        transform: translate(var(--end-x), var(--end-y)) rotateY(360deg); /* End at target, fully flipped */
+        transform: translate(var(--end-x), var(--end-y)) rotateY(360deg);
         opacity: 1;
     }
 }
